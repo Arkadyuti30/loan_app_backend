@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  loan_application:
+    build: ./loan_application
+    ports:
+      - "8000:8000"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+
+  risk_assessment:
+    build: ./risk_assessment
+    ports:
+      - "8001:8001"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+
+  loan_approval:
+    build: ./loan_approval
+    ports:
+      - "8002:8002"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine  # RabbitMQ image with management UI
+    ports:
+      - "5672:5672"  # Default RabbitMQ port
+      - "15672:15672"  # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq  # Persistent volume definition
+
+volumes:
+  rabbitmq-data:  # (empty volume)

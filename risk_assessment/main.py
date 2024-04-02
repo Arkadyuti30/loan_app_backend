@@ -27,7 +27,7 @@ def process_loan_application(message):
         producer.publish(loan_data, exchange='', routing_key='risk_assessment_results') 
         message.ack() # sending ack to queue so that it can now remove the message after processing
     except Exception as e:
-        logger.error(f"Error: Error publishing loan application data for applicant {loan_data.applicant_name}: {e}")
+        logger.error(f"Error: Error publishing data to risk_assessment_results queue for applicant {loan_data.applicant_name}: {e}")
 
 def calculate_risk(loan_data):
     risk_score = 100 #initial value, it's decreased based on potential risks
@@ -79,6 +79,6 @@ consumer = queue_connection.Consumer(queues=[loan_applications_queue])
 # Consume messages from the queue and call the callback function for each message
 consumer.consume(callbacks=[process_loan_application])
 
-# Start consuming messages (blocking call, application waits here)
-consumer.consume()
-
+# Start consuming messages (non-blocking)
+worker = consumer.serve()
+worker.wait()

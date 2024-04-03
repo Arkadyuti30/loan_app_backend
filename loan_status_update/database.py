@@ -35,8 +35,11 @@ class DatabaseConnection:
     try:
       cursor.execute(query, params)
       self.connection.commit()
+
+      print("INSIDE DB CURSOR METHOD")
       
-      # for insert query return the id of the last inserted row
+      # for insert, update & delete queries it'll return the index of item inserted, updated or deleted
+      # for select, it'll return the data of the selected row(s)
       if "INSERT" in query:
         return cursor.lastrowid # the id of the last inserted row
       elif "SELECT" in query:
@@ -44,7 +47,7 @@ class DatabaseConnection:
       elif "UPDATE" in query or "DELETE" in query:
         query_parts = query.split()
         loan_id_index = query_parts.index("loan_id")
-        return query_parts[loan_id_index + 1] # returns the id of the row updated
+        return query_parts[loan_id_index + 2] # returns the id of the row updated
     except Exception as e:
       logger.error(f"Error: Error saving loan application data to db: {e}")
       return None

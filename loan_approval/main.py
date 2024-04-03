@@ -1,59 +1,81 @@
-from kombu import Connection, Producer, Queue
-from fastapi import FastAPI
+from kombu import Connection, Consumer, Producer, Queue, exceptions
+from kombu.mixins import ConsumerProducerMixin
+from kombu.exceptions import ChannelError
+from pika.exceptions import ConnectionClosed
 import logging
-from loan_application.main import LoanStatus
+import json
+import time
+from loan_status import LoanStatus
 
 # Configure a logger
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-app = FastAPI()
+queue_connection_params = {'host': 'localhost', 'port': 5672, 'userid': 'guest', 'password': 'guest'}
 
-def process_loan_approval(message):
-    loan_data = message.payload
+class LoanApprovalService(ConsumerProducerMixin):
+    def __init__(self):
+        # Reconnection logic
+        self.connection = None
+        self.reconnect()
 
-    # Process the loan data (e.g., validate, save to database)
-    logger.info(f"Received risk score for: {loan_data.applicant_name}. Processing loan approval!")
+    def get_consumers(self, Consumer, channel):
+        return [
+            Consumer(
+                queues=Queue('risk_assessment_results'),
+                on_message=self.process_loan_approval
+            )
+        ]
     
-    # Criterea for loan approval
-    '''
-        Risk score negative or less than 50 --> not approved
-        Risk score within 50 to 70 but purpose is wedding or personal --> not approved
-        Risk score within 50 to 70 but purpose is NOT wedding or personal --> approved
-        Risk score above 70 --> approved
-    '''
-    if 0 < loan_data.risk_score < 50:
-        loan_data["loan_status"] = LoanStatus.NOT_APPROVED.value
-    elif 50 <= loan_data.risk_score < 70:
-        if "WEDDING" in loan_data.loan_purpose.upper() or "PERSONAL" in loan_data.loan_purpose.upper() or "BUSINESS" in loan_data.loan_purpose.upper():
-            loan_data["loan_status"] = LoanStatus.NOT_APPROVED.value
-        else:
-            loan_data["loan_status"] = LoanStatus.APPROVED.value
-    elif loan_data.risk_score > 70:
-        loan_data["loan_status"] = LoanStatus.APPROVED.value
+    def process_loan_approval(self, message):
+        try:
+            raw_body = message.body
+            loan_data = json.loads(raw_body)
+
+            # Process the loan data (e.g., validate, save to database)
+            logger.info(f"Received risk score for: {loan_data['applicant_name']}. Processing loan approval!")
     
-    # Creating a producer channel
-    channel = queue_connection.channel()
-    producer = Producer(channel)
+            # Criterea for loan approval
+            '''
+                Risk score negative or less than 50 --> not approved
+                Risk score within 50 to 70 but purpose is wedding or personal --> not approved
+                Risk score within 50 to 70 but purpose is NOT wedding or personal --> approved
+                Risk score above 70 --> approved
+            '''
+            if 0 < loan_data['risk_score'] < 50:
+                loan_data['loan_status'] = LoanStatus.NOT_APPROVED.value
+            elif 50 <= loan_data['risk_score'] < 70:
+                if "WEDDING" in loan_data['loan_purpose'].upper() or "PERSONAL" in loan_data['loan_purpose'].upper() or "BUSINESS" in loan_data['loan_purpose'].upper():
+                    loan_data['loan_status'] = LoanStatus.NOT_APPROVED.value
+                else:
+                    loan_data['loan_status'] = LoanStatus.APPROVED.value
+            elif loan_data['risk_score'] > 70:
+                loan_data['loan_status'] = LoanStatus.APPROVED.value
 
-    # Publish the data to loan_approval_results queue
-    try:
-        producer.publish(loan_data, exchange='', routing_key='loan_approval_results') 
-        message.ack() # sending ack to queue so that it can now remove the message after processing
-    except Exception as e:
-        logger.error(f"Error: Error publishing data to loan_approval_results queue for applicant {loan_data.applicant_name}: {e}")
+            # Publish the data to loan_approval_results queue
+            try:
+                self.producer.publish(
+                    loan_data,
+                    exchange='',  # Use default exchange for direct routing
+                    routing_key='loan_approval_results',
+                    delivery_mode=2,  # Persistent delivery (optional)
+                )
+                message.ack() # sending ack to queue so that it can now remove the message after processing
+            except Exception as e:
+                logger.error(f"Error: Error publishing data to loan_approval_results queue for applicant {loan_data['applicant_name']}: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON message body: {e}")
 
+    def reconnect(self):
+        while True:
+            try:
+                self.connection = Connection(**queue_connection_params)
+                logger.info("Connected to message broker!")
+                break
+            except (ConnectionClosed, ChannelError) as e:
+                logger.warning(f"Connection error: {e}. Retrying in 5 seconds...")
+                time.sleep(5)
 
-queue_connection_string = 'amqp://guest:guest@localhost:5672//'
-queue_connection = Connection(queue_connection_string)
-
-risk_assessment_results_queue = Queue(name='risk_assessment_results', connection=queue_connection)
-
-# Create a consumer object
-consumer = queue_connection.Consumer(queues=[risk_assessment_results_queue])
-
-# Consume messages from the queue and call the callback function for each message
-consumer.consume(callbacks=[process_loan_approval])
-
-# Start consuming messages (non-blocking)
-worker = consumer.serve()
-worker.wait()
+if __name__ == "__main__":
+    service = LoanApprovalService()
+    service.run()

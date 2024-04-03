@@ -2,12 +2,13 @@ from enum import Enum
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import DatabaseConnection
-from kombu import Connection, Producer
+from kombu import Connection, Producer, Queue
 import logging
 import json
 
 # Configure a logger
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = FastAPI()
 
@@ -98,4 +99,4 @@ def publish_data_to_loan_queue(loan_data, queue_connection):
     producer = Producer(channel)
 
     # Publish the data to loan_applications queue
-    producer.publish(loan_data, exchange='', routing_key='loan_applications')
+    producer.publish(loan_data, exchange='', routing_key='loan_applications', delivery_mode=2)

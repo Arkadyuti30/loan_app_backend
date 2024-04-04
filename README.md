@@ -29,7 +29,7 @@ This is the backend for a loan approval app consisting of 4 microservices.
 ![image](https://github.com/Arkadyuti30/loan_app_backend/assets/22547304/764d244c-5f10-4d27-b4e8-cc4125dd5a6f)
 - Click on "Queues and Streams" on top
 - Click on "Add a new queue"
-- Just enter the name
+- Just enter the name (no other details required)
 - Click "Add queue" button at the bottom
 Create 3 queues with the following names, names should be EXACT as mentioned here:
   - loan_applications

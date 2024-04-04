@@ -41,7 +41,7 @@ For the frontend steup go to this repo: https://github.com/Arkadyuti30/loan_app_
 
 Here's a demo video of the whole app:
 
-#### The backend has 4 microservices:
+### The backend has 4 microservices:
    - LoanApplication --> This has 4 APIs
       - /post/loan-application -- Posts loan data to database and loan_applications queue for further processing
       - /get/all/loan-applications -- Returns all the loan applications present in the db
@@ -61,6 +61,11 @@ Here's a demo video of the whole app:
       - Consumes loan data from `loan_approval_results` queue
       - Updates the loan_status for that loan in db
    The whole idea behind this was to have a loosely coupled system that is robust and has higher availability.
+
+Here's the architecture diagram:
+![image](https://github.com/Arkadyuti30/loan_app_backend/assets/22547304/39c69774-f50a-43d0-b3ea-2922720e6d64)
+
+
 
 ### Tech Stack:
 - API Framework: Python Fast API

@@ -10,17 +10,21 @@ This is the backend for a loan approval app consisting of 4 microservices.
      // This is for running RabbitMQ message broker
    - In terminal 2 run, // Loan Application Microservice
       `cd loan_application`
+     `pip install -r requirements.txt`
       `uvicorn main:app --reload`
    - In terminal 3 run, // Risk assessment
      `cd risk_assessment`
+     `pip install -r requirements.txt`
      `python3 main.py`
 
     - In terminal 4 run, // Loan Approval
      `cd loan_approval`
+      `pip install -r requirements.txt`
      `python3 main.py`
 
    - In terminal 3 run, // Loan Status Update
      `cd loan_status_update`
+     `pip install -r requirements.txt`
      `python3 main.py`
 4. Go to your browser & open this url // RabbitMQ UI
    `http://localhost:15672/`
@@ -39,7 +43,8 @@ Create 3 queues with the following names, names should be EXACT as mentioned her
 Congratulation! Backend setup is now complete!
 For the frontend steup go to this repo: https://github.com/Arkadyuti30/loan_app_ui
 
-Here's a demo video of the whole app:
+## Video Demo
+Here's a demo video of the whole app: https://www.loom.com/share/96842ad65c264c74912e464802c2a154?sid=0b776d04-a7c2-4ba1-935b-cc6b029007c5
 
 ### The backend has 4 microservices:
    - LoanApplication --> This has 4 APIs

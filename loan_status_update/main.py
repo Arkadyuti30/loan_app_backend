@@ -36,7 +36,6 @@ class LoanStatusUpdateService(ConsumerMixin):
             db_connection = DatabaseConnection()
             db_connection.connect()
             query = f"UPDATE loan_application SET loan_status = \"{loan_data['loan_status']}\" WHERE loan_id = {loan_data['loan_id']};"
-            print("QUERY: ", query)
             loan_id = db_connection.execute_query(query)
             logger.info(f"Success! Loan status updated in db for loan id: {loan_id}")
             message.ack()  # sending ack to queue so that it can now remove the message after processing

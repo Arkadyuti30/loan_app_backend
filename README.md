@@ -6,8 +6,9 @@ This is the backend for a loan approval app consisting of 4 microservices.
 2. Make sure you have Docker Desktop installed. If not, install from https://www.docker.com/products/docker-desktop/ for your OS
 3. Open 5 terminals in loan_app_backend (repo)
    - In terminal 1 run, // Rabbit MQ
-     `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management`
-     // This is for running RabbitMQ message broker
+     - `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management`
+     - This is for running RabbitMQ message broker
+     - `pip install pika`
    - In terminal 2 run, // Loan Application Microservice
       `cd loan_application`
      `pip install -r requirements.txt`

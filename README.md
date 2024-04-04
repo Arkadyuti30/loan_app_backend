@@ -41,7 +41,7 @@ For the frontend steup go to this repo: https://github.com/Arkadyuti30/loan_app_
 
 Here's a demo video of the whole app:
 
-####The backend has 4 microservices:
+#### The backend has 4 microservices:
    - LoanApplication --> This has 4 APIs
       - /post/loan-application -- Posts loan data to database and loan_applications queue for further processing
       - /get/all/loan-applications -- Returns all the loan applications present in the db

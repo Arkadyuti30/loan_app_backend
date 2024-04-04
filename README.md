@@ -38,5 +38,32 @@ Create 3 queues with the following names, names should be EXACT as mentioned her
 
 Congratulation! Backend setup is now complete!
 For the frontend steup go to this repo: https://github.com/Arkadyuti30/loan_app_ui
- 
+
+Here's a demo video of the whole app:
+
+####The backend has 4 microservices:
+   - LoanApplication --> This has 4 APIs
+      - /post/loan-application -- Posts loan data to database and loan_applications queue for further processing
+      - /get/all/loan-applications -- Returns all the loan applications present in the db
+      - /delete/loan-data/{loan_id} - Accepts loan_id as parameter and deletes that row (one entry only)
+      - /update/loan_data - Based on the loan_id passed to its request body, it updates that row (one entry only)
+   
+   - RiskAssessmentService --> It's a consumer cum producer.
+      - Consumes loan data from `loan_applications` queue
+      - Calculates risk score
+      - Produces to `risk_assessment_results` queue for further computation
+    
+   - LoanApprovalService --> It's a consumer cum producer.
+      - Consumes loan data from `risk_assessment_results` queue
+      - Calculates whether the loan is approved or not based on certain criteria
+      - Produces to `loan_approval_results` queue for updating loan_status in db
+   - LoanStatusUpdateService --> It's a consumer.
+      - Consumes loan data from `loan_approval_results` queue
+      - Updates the loan_status for that loan in db
+   The whole idea behind this was to have a loosely coupled system that is robust and has higher availability.
+
+### Tech Stack:
+- API Framework: Python Fast API
+- Message broker: RabbitMQ
+- Database: MySQL
 
